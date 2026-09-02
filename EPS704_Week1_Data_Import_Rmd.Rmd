@@ -1,0 +1,51 @@
+---
+title: "EPS 704 Week 1: Data Import and Entry"
+author: "Miguel Hernandez"
+date: "`r Sys.Date()`"
+output:
+  html_document: default
+  pdf_document: default
+---
+**GitHub repository:**
+https://github.com/mah1201-png/EPS704.git
+<!-- BEFORE YOU KNIT:
+     1. Put this .Rmd file and the data file in the SAME folder.
+     2. In RStudio click: Session > Set Working Directory > To Source File Location.
+     3. Click the Knit button to build the PDF and the HTML. -->
+
+```{r setup, include=FALSE}
+# include=FALSE hides this setup chunk from the final report.
+knitr::opts_chunk$set(echo = TRUE)   # echo = TRUE prints your code in the report.
+```
+
+## Goal
+
+This report imports two data files and confirms that each one loaded correctly.
+
+## Import a CSV file
+
+```{r import-csv}
+library(readr)                          # readr holds read_csv.
+enroll <- read_csv("enrollment.csv")    # read the file into a table named enroll.
+head(enroll)                            # show the first rows in the report.
+dim(enroll)                             # show the row count and the column count.
+```
+
+The enrollment file loaded with `r nrow(enroll)` rows and `r ncol(enroll)` columns.
+
+## Import one Excel sheet
+
+```{r import-excel}
+library(readxl)                         # readxl holds read_excel.
+demo <- read_excel("institutional.xlsx",# read the workbook.
+                   sheet = "Demographics") # name the sheet to read.
+head(demo)                              # show the first rows in the report.
+dim(demo)                               # show the row count and the column count.
+```
+
+The Demographics sheet loaded with `r nrow(demo)` rows and `r ncol(demo)` columns.
+
+## Note
+
+The text above uses inline code such as `r nrow(enroll)` so the numbers update
+themselves every time you knit. Click Knit to build the PDF and the HTML.
