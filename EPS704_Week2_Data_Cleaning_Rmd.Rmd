@@ -1,0 +1,63 @@
+---
+title: "EPS 704 Week 2: Data Cleaning and Filtering"
+author: "Miguel Hernandez"
+date: "`r Sys.Date()`"
+output:
+  html_document: default
+  pdf_document: default
+---
+**GitHub repository:** https://github.com/mah1201-png/EPS704.git
+<!-- BEFORE YOU KNIT: put this file and the data in the same folder, then in RStudio
+     click Session > Set Working Directory > To Source File Location, then click Knit. -->
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)   # echo = TRUE prints your code in the report.
+```
+
+## Goal
+
+Read a messy file, clean common problems, count what is missing, and keep the active students.
+
+## Clean and count missing
+
+```{r clean}
+library(readr); library(dplyr); library(stringr)   # load the toolboxes.
+messy <- read_csv("messy.csv")                      # read the file.
+clean <- messy |>
+  mutate(program = str_trim(program)) |>             # remove extra spaces.
+  mutate(gender = str_to_lower(gender)) |>            # lowercase gender for matching.
+  mutate(gender = case_when(
+    gender %in% c("f", "female") ~ "Female",
+    gender %in% c("m", "male")   ~ "Male",
+    TRUE ~ gender)) |>                                # recode spellings into two labels.
+  mutate(gpa = as.numeric(gpa)) |>                    # convert gpa text to numbers.
+  mutate(gpa = na_if(gpa, 999)) |>                    # mark 999 as missing.
+  distinct(student_id, .keep_all = TRUE)              # drop duplicate students.
+colSums(is.na(clean))                                 # count missing in each column..
+```
+## Convert the enrollment date
+
+```{r date}
+enroll <- read_csv("enrollment.csv")                        # read the clean enrollment file.
+enroll$enrolled_on <- as.Date(enroll$enrolled_on)            # text becomes a real date.
+class(enroll$enrolled_on)                                    # confirm the column is now a Date.
+```
+## Filter and compare
+
+```{r filter}
+active <- clean |> filter(enrolled_status == "Active")   # keep Active students.
+nrow(messy)                             # starting rows.
+nrow(active)                            # final rows.
+```
+
+The file started with `r nrow(messy)` rows and ended with `r nrow(active)` active students.
+## Bonus: 999 codes and duplicates
+
+```{r bonus}
+n_999 <- sum(messy$gpa %in% c("999", "999.0"), na.rm = TRUE)   # gpa values that were the 999 code.
+n_duplicates <- nrow(messy) - nrow(distinct(messy, student_id, .keep_all = TRUE))  # duplicate rows removed.
+n_999
+n_duplicates
+```
+
+There were `r n_999` gpa values coded as 999, and `r n_duplicates` duplicate student rows were removed.
