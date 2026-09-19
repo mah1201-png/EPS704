@@ -1,0 +1,55 @@
+---
+title: "EPS 704 Week 3: Data Transformation and Aggregation"
+author: "Miguel Hernandez"
+date: "`r Sys.Date()`"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+<!-- BEFORE YOU KNIT: put this file and the data in the same folder, then in RStudio
+     click Session > Set Working Directory > To Source File Location, then click Knit. -->
+**GitHub repository:** https://github.com/mah1201-png/EPS704
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)   # echo = TRUE prints your code in the report.
+```
+
+## Goal
+
+Create a column, summarise by group, reshape both ways, and join two tables.
+
+## Transform and summarise
+
+```{r transform}
+library(readr); library(dplyr); library(tidyr)
+enroll <- read_csv("enrollment.csv")
+
+enroll <- enroll |>
+  mutate(gpa = na_if(gpa, 999)) |>                    # mark the 999 code as missing.
+  mutate(gpa_group = case_when(
+    is.na(gpa) ~ NA_character_,                        # missing gpa stays missing.
+    gpa >= 3.5 ~ "High",
+    gpa >= 3.0 ~ "Middle",
+    TRUE ~ "Low"))
+
+enroll |> group_by(program) |>
+  summarise(across(c(gpa, credits), mean, na.rm = TRUE)) #average both columns.
+```
+
+
+```{r reshape-join}
+scores <- read_csv("scores_wide.csv")
+long <- pivot_longer(scores, c(midterm, final, project),
+                     names_to = "score_type", values_to = "score")
+wide <- pivot_wider(long, names_from = score_type, values_from = score)
+
+advisors <- read_csv("advisors.csv")
+joined <- left_join(enroll, advisors, by = "advisor_id")
+head(joined)
+```
+
+## Bonus: students with no matching advisor
+
+```{r bonus}
+joined |> filter(is.na(advisor_name)) |> nrow()   # expect 0: every student matched an advisor.
+```
