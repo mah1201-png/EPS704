@@ -1,0 +1,45 @@
+---
+title: "EPS 704 Week 4: Descriptive Statistics"
+author: "Miguel Hernandez"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+<!-- BEFORE YOU KNIT: put this file and the data in the same folder, then in RStudio
+     click Session > Set Working Directory > To Source File Location, then click Knit. -->
+
+**GitHub repository:** https://github.com/mah1201-png/EPS704
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)   # echo = TRUE prints your code in the report.
+```
+
+## Goal
+
+Describe gpa, count categories, build a two way table, and a correlation matrix.
+
+## Summaries and tables
+
+```{r describe}
+library(readr); library(dplyr)
+enroll <- read_csv("enrollment.csv")
+enroll <- enroll |> mutate(gpa = na_if(gpa, 999))    # 999 is a sentinel for missing gpa.
+
+summary(enroll$gpa)                                  # five number summary.
+sd(enroll$gpa, na.rm = TRUE)                         # spread of gpa.
+table(enroll$program)                                # students per program.
+table(enroll$program, enroll$degree_level)           # two way table.
+
+enroll |> group_by(program) |>
+  summarise(mean_gpa = mean(gpa, na.rm = TRUE), students = n())   # average gpa per program.
+
+cor(enroll[c("gpa","credits","gre_q","gre_v")], use = "complete.obs")  # matrix.
+```
+
+The average gpa is `r round(mean(enroll$gpa, na.rm = TRUE), 2)`.
+
+## Bonus: strongest and weakest correlation
+
+The strongest link in the correlation matrix is between `gre_q` and `gre_v` (r approximately 0.04), and the weakest is between `credits` and `gre_v` (r approximately -0.006). Overall, none of these variables show a meaningful linear relationship with each other — all correlations are close to zero.
