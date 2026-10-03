@@ -1,0 +1,52 @@
+---
+title: "EPS 704 Week 5: Exploratory Analysis and Statistics"
+author: "Miguel Hernandez"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+<!-- BEFORE YOU KNIT: put this file and the data in the same folder, then in RStudio
+     click Session > Set Working Directory > To Source File Location, then click Knit. -->
+
+**GitHub repository:** https://github.com/mah1201-png/EPS704
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)   # echo = TRUE prints your code in the report.
+```
+
+## Goal
+
+Run correlation, a t test, ANOVA, chi square, regression, and a paired test.
+
+## Tests
+
+```{r tests}
+library(readr)
+library(dplyr)
+enroll <- read_csv("enrollment.csv")
+enroll <- enroll |> mutate(gpa = na_if(gpa, 999))    # 999 is a sentinel for missing gpa.
+
+cor.test(enroll$gpa, enroll$credits)                 # correlation with p value.
+t.test(gpa ~ graduated, data = enroll)               # two groups.
+enroll |> group_by(graduated) |> summarise(mean_gpa = mean(gpa, na.rm = TRUE))   # bonus: group means.
+summary(aov(gpa ~ program, data = enroll))           # many groups.
+chisq.test(table(enroll$degree_level, enroll$graduated))   # two categories.
+summary(lm(gpa ~ credits, data = enroll))            # regression.
+
+pp <- read_csv("pre_post_scores.csv")
+t.test(pp$post, pp$pre, paired = TRUE)               # paired test.
+```
+
+The correlation between gpa and credits is weak and not statistically significant, r is about -0.04 and p is 0.26.
+
+The t test shows no significant difference in gpa between graduated and non-graduated students, p is 0.71, with average gpa of about 3.33 in both groups.
+
+The ANOVA shows a statistically significant difference in gpa across programs, p is less than 0.0001.
+
+The chi square test shows no significant link between degree level and graduation status, p is 0.86.
+
+The regression shows credits does not meaningfully predict gpa, the slope is close to zero and p is 0.26.
+
+The paired t test shows a significant increase from pre to post scores, p is less than 0.0001, with an average increase of about 4.18 points.
