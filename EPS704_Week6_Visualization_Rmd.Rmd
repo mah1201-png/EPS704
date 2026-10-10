@@ -1,0 +1,112 @@
+---
+title: "EPS 704 Week 6: Integrated Report with R Markdown"
+author: "Miguel Hernandez"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+<!-- BEFORE YOU KNIT: put this file and the data in the same folder, then in RStudio
+     click Session > Set Working Directory > To Source File Location, then click Knit. -->
+
+**GitHub repository:** https://github.com/mah1201-png/EPS704
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      fig.width = 7, fig.height = 4.5)   # echo = TRUE prints your code in the report.
+```
+
+## Goal
+
+A small end to end report: import, one summary, six plots with clear labels, a saved plot, and a short conclusion.
+
+## Import and summary
+
+```{r import}
+library(readr); library(dplyr); library(ggplot2)
+enroll <- read_csv("enrollment.csv")
+enroll <- enroll |> mutate(gpa = na_if(gpa, 999))   # 999 is a sentinel for missing gpa.
+mean(enroll$gpa, na.rm = TRUE)                       # average gpa.
+```
+
+The data has `r nrow(enroll)` students. The average gpa is `r round(mean(enroll$gpa, na.rm = TRUE), 2)`. There are `r sum(is.na(enroll$gpa))` students with a missing gpa (coded 999 in the raw file), and they are left out of the plots below.
+
+## Plots
+
+### Histogram
+
+```{r hist}
+ggplot(enroll, aes(x = gpa)) +
+  geom_histogram(binwidth = 0.1) +
+  labs(title = "Distribution of GPA", x = "GPA", y = "Number of students")
+```
+
+Most students have a gpa between about 3.0 and 3.8, with a small tail of lower values.
+
+### Scatter with a trend line
+
+```{r scatter}
+ggplot(enroll, aes(x = credits, y = gpa)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "GPA by credits", x = "Credits", y = "GPA")
+```
+
+The trend line is nearly flat, so credits tell us very little about gpa.
+
+### Box plot
+
+```{r box}
+ggplot(enroll, aes(x = degree_level, y = gpa)) +
+  geom_boxplot() +
+  labs(title = "GPA by degree level", x = "Degree level", y = "GPA")
+```
+
+**What the picture tells us:** PhD students have a higher median gpa than Masters students, and the Masters group has more low outliers. **A question it raises:** every program belongs to only one degree level, so is this gap caused by degree level itself, or by the specific programs that happen to be PhD programs?
+
+### Bar chart
+
+```{r bar}
+ggplot(enroll, aes(x = program)) +
+  geom_bar() +
+  labs(title = "Students per program", x = "Program", y = "Number of students") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))   # tilt long labels.
+```
+
+Counseling Psychology is the largest program and Research Methodology is the smallest.
+
+### Colour by degree level
+
+```{r colour}
+ggplot(enroll, aes(x = credits, y = gpa, color = degree_level)) +
+  geom_point() +
+  labs(title = "GPA by credits, colored by degree level",
+       x = "Credits", y = "GPA", color = "Degree level")
+```
+
+The two degree levels overlap heavily at every credit value.
+
+### Small multiples by program
+
+```{r facet, fig.width=9, fig.height=6}
+p <- ggplot(enroll, aes(x = credits, y = gpa)) +
+  geom_point() +
+  facet_wrap(~ program) +                      # one small plot per program.
+  labs(title = "GPA by credits, one panel per program", x = "Credits", y = "GPA")
+p
+```
+
+The pattern looks similar in every program, with no clear link between credits and gpa in any panel.
+
+### Save a plot to a file
+
+```{r save}
+ggsave("gpa_plot.png", p, width = 9, height = 6)   # save the small multiples plot to a file.
+```
+
+The small multiples plot is saved as `gpa_plot.png` in the project folder.
+
+## Conclusion
+
+Across the plots, gpa is concentrated at the high end and shows almost no link with credits, overall or within any program. The clearest difference is by degree level, where PhD students have a higher median gpa, though degree level and program are tied together in this data. The same plots were also built in Python and SAS.
